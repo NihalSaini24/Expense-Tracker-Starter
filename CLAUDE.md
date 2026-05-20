@@ -27,10 +27,10 @@ Single-page React 19 app, Vite-bundled. `src/main.jsx` mounts `<App />`; everyth
 
 Component layout (all flat in `src/`):
 
-- **`App.jsx`** — owns the `transactions` array (seeded with hardcoded data, no persistence) and the `categories` constant. Exposes `handleAdd(formData)` that stamps `id`/`date` onto the form payload and appends. Composes the three children below.
+- **`App.jsx`** — owns the `transactions` array (seeded with hardcoded data, no persistence) and the `categories` constant. Exposes `handleAdd(formData)` (stamps `id`/`date` and appends) and `handleDelete(id)` (filters out by id). Composes the three children below.
 - **`Summary.jsx`** — receives `transactions`, computes `totalIncome` / `totalExpenses` / `balance` locally, renders the three summary cards.
 - **`TransactionForm.jsx`** — owns its own form state (description/amount/type/category). Takes `categories` and `onAdd` props. Coerces `amount` to `Number` before calling `onAdd`, then resets fields.
-- **`TransactionList.jsx`** — owns its own filter state (filterType/filterCategory). Takes `transactions` and `categories` props. Does the type+category filtering internally and renders the table.
+- **`TransactionList.jsx`** — owns its own filter state (filterType/filterCategory). Takes `transactions`, `categories`, and `onDelete` props. Does the type+category filtering internally and renders the table; each row has a Delete button in the Actions column that prompts via `window.confirm` before calling `onDelete(t.id)`.
 
 Data flow is one-way: `App` holds the canonical list, children either read from it (`Summary`, `TransactionList`) or contribute to it via `onAdd` (`TransactionForm`). UI-local concerns (form fields, filters) live inside the component that uses them, not in `App`.
 
