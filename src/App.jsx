@@ -47,7 +47,7 @@ function App() {
     const newTransaction = {
       id: Date.now(),
       description,
-      amount,
+      amount: Number(amount),
       type,
       category,
       date: new Date().toISOString().split('T')[0],
