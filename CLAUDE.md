@@ -23,19 +23,20 @@ Vite 7 requires **Node 20.19+ or 22.12+**. Node 18 fails at startup with `TypeEr
 
 ## Architecture
 
-Single-page React 19 app, Vite-bundled. The entire application lives in `src/App.jsx` — one component holding:
+Single-page React 19 app, Vite-bundled. `src/main.jsx` mounts `<App />`; everything else lives under `src/`. No router, no state library, no backend.
 
-- All transaction state (seeded with hardcoded data, no persistence)
-- Form state for adding transactions
-- Filter state (by type and category)
-- Derived totals (income, expenses, balance)
-- The full render tree (summary cards, add form, filter controls, table)
+Component layout (all flat in `src/`):
 
-`src/main.jsx` just mounts `<App />`. There is no router, no component decomposition, no state library, and no backend — adding any of these is a deliberate architectural change, not a given.
+- **`App.jsx`** — owns the `transactions` array (seeded with hardcoded data, no persistence) and the `categories` constant. Exposes `handleAdd(formData)` that stamps `id`/`date` onto the form payload and appends. Composes the three children below.
+- **`Summary.jsx`** — receives `transactions`, computes `totalIncome` / `totalExpenses` / `balance` locally, renders the three summary cards.
+- **`TransactionForm.jsx`** — owns its own form state (description/amount/type/category). Takes `categories` and `onAdd` props. Coerces `amount` to `Number` before calling `onAdd`, then resets fields.
+- **`TransactionList.jsx`** — owns its own filter state (filterType/filterCategory). Takes `transactions` and `categories` props. Does the type+category filtering internally and renders the table.
 
-## Known issue to be aware of
+Data flow is one-way: `App` holds the canonical list, children either read from it (`Summary`, `TransactionList`) or contribute to it via `onAdd` (`TransactionForm`). UI-local concerns (form fields, filters) live inside the component that uses them, not in `App`.
 
-Transaction `amount` is stored as a string (both in the seeded data and from the `<input type="number">` whose `value` is a string). The totals use `reduce((sum, t) => sum + t.amount, 0)`, which produces string concatenation (e.g. `"0" + "5000" + "1200"…`) rather than numeric addition. This is the "intentional bug" the README alludes to — flag it before silently changing it, since fixing it may be the user's actual task.
+## Invariant: `amount` is numeric
+
+Transaction `amount` is a `Number` everywhere in the `transactions` array — both in the seeded data (`App.jsx`) and in entries added via the form (`TransactionForm.handleSubmit` coerces the string input with `Number(amount)`). The README originally flagged a string-vs-number bug in the totals; that bug is fixed by keeping the data shape numeric throughout. If you add new write paths, preserve the invariant — don't reintroduce string amounts.
 
 ## Lint config note
 
